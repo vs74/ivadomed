@@ -12,6 +12,7 @@ from ivadomed import config_manager as imed_config_manager
 import ivadomed.models as imed_models
 from ivadomed import main as imed
 from ivadomed import utils as imed_utils
+from ivadomed import inference as imed_inference
 
 
 def test_download_data():
@@ -225,7 +226,7 @@ def test_create_json_3d_unet_test():
         "soft_gt": False
     }
     initial_config["log_directory"] = "3d_test"
-    initial_config["UNet3D"] = {
+    initial_config["Modified3DUNet"] = {
         "applied": True,
         "length_3D": [48, 48, 16],
         "stride_3D": [48, 48, 16],
@@ -247,7 +248,7 @@ def test_create_json_3d_unet_test():
 
 
 def test_create_model_unet3d():
-    model = imed_models.UNet3D(in_channel=1, out_channel=1, n_filters=8, attention=True)
+    model = imed_models.Modified3DUNet(in_channel=1, out_channel=1, n_filters=8, attention=True)
     torch.save(model, "model_unet_3d_test.pt")
     os.makedirs("3d_test")
     command = "cp model_unet_3d_test.pt 3d_test/best_model.pt"
@@ -282,7 +283,7 @@ def test_training_curve_single():
             },
             "NumpyToTensor": {}
         },
-        "UNet3D": {
+        "Modified3DUNet": {
             "applied": True,
             "length_3D": [32, 32, 32],
             "stride_3D": [32, 32, 32],
@@ -313,12 +314,12 @@ def test_object_detection_inference():
     fname_image = "testing_data/sub-unf01/anat/sub-unf01_T1w.nii.gz"
 
     # Detection
-    nib_detection = imed_utils.segment_volume(folder_model="findcord_tumor", fname_image=fname_image)
+    nib_detection = imed_inference.segment_volume(folder_model="findcord_tumor", fname_image=fname_image)
     detection_file = "detection.nii.gz"
     nib.save(nib_detection, detection_file)
 
     # Segmentation
-    imed_utils.segment_volume(folder_model="t2_tumor", fname_image=fname_image, options={'fname_prior': detection_file})
+    imed_inference.segment_volume(folder_model="t2_tumor", fname_image=fname_image, options={'fname_prior': detection_file})
 
 
 def append_list_as_row(file_name, list_of_elem):

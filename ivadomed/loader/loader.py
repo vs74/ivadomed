@@ -55,7 +55,7 @@ def load_dataset(data_list, bids_path, transforms_params, model_params, target_s
     if 'ROICrop' not in transforms_params:
         roi_params["slice_filter_roi"] = None
 
-    if model_params["name"] == "UNet3D":
+    if model_params["name"] == "Modified3DUNet" or ('is_2d' in model_params and not model_params['is_2d']):
         dataset = Bids3DDataset(bids_path,
                                 subject_lst=data_list,
                                 target_suffix=target_suffix,
@@ -78,7 +78,7 @@ def load_dataset(data_list, bids_path, transforms_params, model_params, target_s
                                               slice_axis=imed_utils.AXIS_DCT[slice_axis],
                                               transform=tranform_lst,
                                               metadata_choice=metadata_type,
-                                              slice_filter_fn=imed_utils.SliceFilter(**slice_filter_params, device=device,
+                                              slice_filter_fn=imed_loader_utils.SliceFilter(**slice_filter_params, device=device,
                                               cuda_available=cuda_available),
                                               roi_params=roi_params,
                                               object_detection_params=object_detection_params,
@@ -97,14 +97,14 @@ def load_dataset(data_list, bids_path, transforms_params, model_params, target_s
                               slice_axis=imed_utils.AXIS_DCT[slice_axis],
                               transform=tranform_lst,
                               multichannel=multichannel,
-                              slice_filter_fn=imed_utils.SliceFilter(**slice_filter_params, device=device,
+                              slice_filter_fn=imed_loader_utils.SliceFilter(**slice_filter_params, device=device,
                               cuda_available=cuda_available),
                               soft_gt=soft_gt,
                               object_detection_params=object_detection_params,
                               task=task)
         dataset.load_filenames()
 
-    if model_params["name"] != "UNet3D":
+    if model_params["name"] != "Modified3DUNet":
         print("Loaded {} {} slices for the {} set.".format(len(dataset), slice_axis, dataset_type))
     else:
         print("Loaded {} volumes of size {} for the {} set.".format(len(dataset), slice_axis, dataset_type))
@@ -807,6 +807,7 @@ class BidsDataset(MRI2DSegmentationDataset):
                     if not all([imed_film.check_isMRIparam(m, metadata, subject, self.metadata) for m in
                                 self.metadata.keys()]):
                         continue
+
                 elif metadata_choice and metadata_choice != 'contrasts' and metadata_choice is not None:
                     # add custom data to metadata
                     subject_id = subject.record["subject_id"]
