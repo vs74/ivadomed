@@ -20,7 +20,7 @@ MODEL_LIST = ['UNet3D', 'HeMISUnet', 'FiLMedUnet', 'resnet18', 'densenet121', 'C
 
 
 def get_parser():
-    parser = argparse.ArgumentParser(add_help=False)
+    parser = argparse.ArgumentParser(add_help=True)
 
     # MANDATORY ARGUMENTS
     mandatory_args = parser.add_argument_group('MANDATORY ARGUMENTS')
